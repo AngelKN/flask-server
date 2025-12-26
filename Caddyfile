@@ -1,0 +1,5 @@
+anaronn8n.duckdns.org {
+  encode gzip zstd
+  reverse_proxy http://n8n:5678
+}
+

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agente Conversacional | Alcaldía de Bucaramanga</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" aria-label="Panel lateral">
+      <div class="brand">
+        <div class="brand__logo" aria-hidden="true">AB</div>
+        <div class="brand__text">
+          <h1>Alcaldía de Bucaramanga</h1>
+          <p>Agente Conversacional</p>
+        </div>
+      </div>
+
+      <div class="quick">
+        <h2>Accesos rápidos</h2>
+        <div class="quick__grid">
+          <button class="chip" data-quick="Pagar impuesto predial">Predial</button>
+          <button class="chip" data-quick="¿Cómo saco el recibo del ICA?">ICA</button>
+          <button class="chip" data-quick="Requisitos para PQRS">PQRS</button>
+          <button class="chip" data-quick="Horarios y puntos de atención">Atención</button>
+          <button class="chip" data-quick="Quiero radicar una solicitud">Radicación</button>
+          <button class="chip" data-quick="Información sobre movilidad y tránsito">Movilidad</button>
+        </div>
+      </div>
+
+      <div class="status">
+        <div class="status__dot" id="statusDot" aria-hidden="true"></div>
+        <div class="status__text">
+          <span id="statusLabel">Listo</span>
+          <small id="statusHint">Conectado al servidor.</small>
+        </div>
+      </div>
+
+      <div class="footer">
+        <small>
+          Este canal no reemplaza líneas de emergencia. <br />
+          En caso de emergencia marca <b>123</b>.
+        </small>
+      </div>
+    </aside>
+
+    <!-- CHAT -->
+    <main class="chat" aria-label="Chat principal">
+      <header class="chat__header">
+        <div class="agent">
+          <div class="agent__avatar" aria-hidden="true">
+            <span>🤖</span>
+          </div>
+          <div class="agent__meta">
+            <h2>Asistente Ciudadano</h2>
+            <p>Respuestas informativas • Canal de atención digital</p>
+          </div>
+        </div>
+
+        <div class="chat__actions">
+          <button class="icon-btn" id="btnNew" title="Nuevo chat" aria-label="Nuevo chat">⟲</button>
+          <button class="icon-btn" id="btnExport" title="Exportar conversación" aria-label="Exportar conversación">⤓</button>
+          <button class="icon-btn" id="btnTheme" title="Cambiar tema" aria-label="Cambiar tema">☾</button>
+        </div>
+      </header>
+
+      <section class="chat__body" id="chatBody" aria-live="polite" aria-label="Mensajes">
+        <!-- Mensaje inicial -->
+        <div class="msg msg--bot">
+          <div class="bubble">
+            <div class="bubble__meta">
+              <span class="who">Asistente</span>
+              <span class="time" data-time></span>
+            </div>
+            <div class="bubble__text">
+              Hola 👋 Soy el asistente de la Alcaldía de Bucaramanga.
+              Dime en qué puedo ayudarte: trámites, impuestos, PQRS, horarios, puntos de atención, etc.
+            </div>
+            <div class="bubble__suggestions">
+              <button class="suggest" data-suggest="Quiero radicar una PQRS">Radicar PQRS</button>
+              <button class="suggest" data-suggest="¿Cómo pago el predial?">Pagar predial</button>
+              <button class="suggest" data-suggest="Horarios de atención presencial">Horarios</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="chat__footer">
+        <div class="composer">
+          <button class="attach-btn" id="btnAttach" title="Adjuntar (demo)" aria-label="Adjuntar">📎</button>
+
+          <div class="input-wrap">
+            <textarea id="txtMessage" rows="1" placeholder="Escribe tu mensaje…"></textarea>
+            <div class="hint">
+              <span id="typingHint"></span>
+            </div>
+          </div>
+
+          <button class="send-btn" id="btnSend" aria-label="Enviar mensaje">
+            Enviar <span class="send-icon">➤</span>
+          </button>
+        </div>
+
+        <div class="legal">
+          <small>
+            Al usar este chat aceptas el tratamiento de datos conforme a la normativa aplicable y las políticas institucionales.
+          </small>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
