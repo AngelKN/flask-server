@@ -433,3 +433,168 @@ textarea{
   .sidebar{ display: none; }
   .composer{ grid-template-columns: 44px 1fr 110px; }
 }
+
+/* =========================
+   RESPONSIVE (MEJORADO)
+========================= */
+
+/* Mejor soporte para móvil: altura real */
+.app{
+  min-height: 100vh;
+  min-height: 100dvh; /* navegadores modernos */
+}
+
+/* Tablets / pantallas medianas */
+@media (max-width: 980px){
+  .app{
+    grid-template-columns: 1fr;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  /* En vez de ocultarla totalmente, la hacemos “compacta” arriba */
+  .sidebar{
+    display: block;
+    padding: 12px;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+  }
+
+  /* Compactar secciones del sidebar */
+  .quick, .footer{
+    display: none; /* en móvil estorban; si las quieres visibles dime y las hacemos colapsables */
+  }
+
+  .brand{
+    box-shadow: none;
+    border-radius: 16px;
+  }
+
+  /* Chat ocupa todo */
+  .chat{
+    height: 100%;
+    min-height: 0;
+  }
+
+  .chat__body{
+    padding: 14px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bubble{
+    width: min(740px, 96%);
+  }
+
+  /* Header más compacto */
+  .chat__header{
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .agent__avatar{
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+  }
+
+  .icon-btn{
+    width: 38px;
+    height: 38px;
+    border-radius: 14px;
+  }
+
+  /* Footer: pegado abajo y cómodo */
+  .chat__footer{
+    padding: 10px 12px 12px;
+  }
+
+  .composer{
+    grid-template-columns: 44px 1fr 108px;
+    gap: 8px;
+  }
+
+  .send-btn{
+    height: 44px;
+    border-radius: 14px;
+  }
+}
+
+/* Teléfonos */
+@media (max-width: 560px){
+  .sidebar{
+    padding: 10px;
+  }
+
+  .brand{
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .brand__logo{
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+  }
+
+  .brand__text h1{ font-size: 13px; }
+  .brand__text p{ font-size: 11px; }
+
+  .chat__header{
+    padding: 10px 12px;
+  }
+
+  .agent__meta h2{
+    font-size: 13px;
+  }
+  .agent__meta p{
+    display: none; /* ahorra espacio */
+  }
+
+  .chat__body{
+    padding: 12px;
+  }
+
+  .bubble{
+    width: 100%;
+    padding: 11px 11px 9px;
+  }
+
+  .bubble__text{
+    font-size: 14px;
+  }
+
+  .composer{
+    grid-template-columns: 44px 1fr 52px; /* botón enviar compacto */
+    align-items: end;
+  }
+
+  .send-btn{
+    width: 52px;
+    padding: 0;
+  }
+
+  /* Ocultamos texto “Enviar” y dejamos el ícono */
+  .send-btn .send-icon{
+    display: inline;
+  }
+  .send-btn{
+    font-size: 0; /* oculta texto */
+  }
+  .send-btn .send-icon{
+    font-size: 16px;
+  }
+}
+
+/* Muy pequeño */
+@media (max-width: 380px){
+  .icon-btn{
+    width: 36px;
+    height: 36px;
+  }
+  .attach-btn{
+    width: 42px;
+    height: 42px;
+  }
+}
+
