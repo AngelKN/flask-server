@@ -46,13 +46,6 @@ services:
       - REQUEST_TIMEOUT=60
       - LOG_LEVEL=INFO
 
-<<<<<<< HEAD
-volumes:
-  n8n_data:
-  caddy_data:
-  caddy_config:
-
-=======
       - FLASK_SECRET_KEY=bae89494e226be61f439aa0f8a1b4e085313b32e5e2faba851ea2a17fa6d749e
       - SUPABASE_URL=https://vvhweaklnxnljnpqwnhd.supabase.co
       - SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2aHdlYWtsbnhubGpucHF3bmhkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjU0MTYwNSwiZXhwIjoyMDgyMTE3NjA1fQ.lLC2SyT-9mEgVZunoXVpybsPXXIPSMX3C4My_jzCO7c
@@ -61,4 +54,3 @@ volumes:
   n8n_data:
   caddy_data:
   caddy_config:
->>>>>>> e94429f (second commit)

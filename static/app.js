@@ -20,10 +20,6 @@ const typingHint = document.getElementById("typingHint");
 const statusLabel = document.getElementById("statusLabel");
 const statusHint = document.getElementById("statusHint");
 const statusDot = document.getElementById("statusDot");
-
-<<<<<<< HEAD
-let conversation = []; // local para exportación UI
-=======
 const dataConsentModal = document.getElementById("dataConsentModal");
 const btnAcceptData = document.getElementById("btnAcceptData");
 //const btnRejectData = document.getElementById("btnRejectData");
@@ -32,8 +28,6 @@ const chatBodyContent = document.querySelector('.chat__body'); // Para ocultar/m
 
 let conversation = []; // local para exportación UI
 let userConsentGiven = false; // Rastrear si el usuario ha aceptado
-
->>>>>>> e94429f (second commit)
 
 /* =========================
    SESSION ID (persistente por navegador)
@@ -92,12 +86,9 @@ function escapeHtml(str){
 }
 
 function addMessage(role, text){
-<<<<<<< HEAD
-=======
    // Solo añade mensajes si el consentimiento ha sido dado
   if (!userConsentGiven && role === "assistant") return; // No mostrar respuestas del bot si no hay consentimiento
 
->>>>>>> e94429f (second commit)
   const wrapper = document.createElement("div");
   wrapper.className = `msg ${role === "user" ? "msg--user" : "msg--bot"}`;
 
@@ -131,12 +122,8 @@ function addMessage(role, text){
 }
 
 function addTyping(){
-<<<<<<< HEAD
-=======
   // Solo muestra el indicador si el consentimiento ha sido dado
   if (!userConsentGiven) return;
-
->>>>>>> e94429f (second commit)
   const wrapper = document.createElement("div");
   wrapper.className = "msg msg--bot";
   wrapper.id = "typingRow";
@@ -204,11 +191,6 @@ function downloadText(filename, text){
    BACKEND CALL (Flask -> n8n)
 ========================= */
 async function callBackend(userText){
-<<<<<<< HEAD
-  const payload = {
-    mensaje: userText,
-    sessionId: getSessionId()
-=======
 
   if (!userConsentGiven) {
     throw new Error("Por favor, acepta el tratamiento de datos para continuar.");
@@ -218,7 +200,6 @@ async function callBackend(userText){
     mensaje: userText,
     sessionId: getSessionId(),
     ipAddress: await getClientIp()
->>>>>>> e94429f (second commit)
   };
 
   const res = await fetch(API.chat, {
@@ -249,15 +230,11 @@ async function sendMessage(text){
   const clean = (text || "").trim();
   if(!clean) return;
 
-<<<<<<< HEAD
-=======
   // Si el consentimiento no ha sido dado, no se permite enviar mensajes
   if (!userConsentGiven) {
     displayMessageModal(); // Muestra el modal si no se ha dado el consentimiento
     return;
   }
-
->>>>>>> e94429f (second commit)
   addMessage("user", clean);
   conversation.push({ role: "user", content: clean, ts: new Date().toISOString() });
 
@@ -281,14 +258,11 @@ async function sendMessage(text){
     typingHint.textContent = "";
   }catch(err){
     removeTyping();
-<<<<<<< HEAD
-=======
     // Si el error es por falta de consentimiento, mostramos el modal
     if (err.message.includes("Por favor, acepta el tratamiento de datos")) {
         displayMessageModal();
         return; // Detiene el flujo aquí
     }
->>>>>>> e94429f (second commit)
     setStatus("warn", "No fue posible responder. Revisa n8n / endpoint.");
     addMessage("assistant", "En este momento no pude procesar tu solicitud. Intenta de nuevo o revisa la conexión con n8n.");
     typingHint.textContent = "";
@@ -298,9 +272,6 @@ async function sendMessage(text){
     txtMessage.focus();
   }
 }
-
-<<<<<<< HEAD
-=======
 
 /* =========================
    LÓGICA DEL MODAL DE CONSENTIMIENTO
@@ -476,7 +447,6 @@ async function initializeChat() {
     txtMessage.focus();
 }
 
->>>>>>> e94429f (second commit)
 /* =========================
    EVENTS
 ========================= */
@@ -492,15 +462,6 @@ txtMessage.addEventListener("keydown", (e) => {
 txtMessage.addEventListener("input", () => autoGrowTextarea(txtMessage));
 
 btnNew.addEventListener("click", () => {
-<<<<<<< HEAD
-  // limpia mensajes salvo el inicial
-  const nodes = Array.from(chatBody.querySelectorAll(".msg"));
-  nodes.slice(1).forEach(n => n.remove());
-
-  conversation = [];
-  resetSessionId(); // NUEVA conversación real (sessionId nuevo)
-  setStatus("ok", "Nuevo chat iniciado.");
-=======
 // Si el usuario no ha aceptado, limpiar todo
   if (!userConsentGiven) {
     localStorage.removeItem('chat_session_id');
@@ -525,16 +486,10 @@ btnNew.addEventListener("click", () => {
   // Re-añadir el mensaje inicial del bot si aplica y no hay consentimiento
   // Por ahora, solo reiniciamos el chat y el estado
   setStatus("ok", "Nuevo chat iniciado. SessionId: " + getSessionId());
->>>>>>> e94429f (second commit)
   typingHint.textContent = "";
   txtMessage.value = "";
   autoGrowTextarea(txtMessage);
   txtMessage.focus();
-<<<<<<< HEAD
-});
-
-btnExport.addEventListener("click", () => {
-=======
 
   // Opcional: Podrías querer añadir de nuevo el mensaje de bienvenida del bot
   // addMessage("assistant", "¡Hola de nuevo! En qué puedo ayudarte hoy.");
@@ -546,7 +501,6 @@ btnExport.addEventListener("click", () => {
     alert("Para exportar la conversación, primero debes aceptar el tratamiento de datos.");
     return;
   }
->>>>>>> e94429f (second commit)
   const lines = conversation.map(m => {
     const who = m.role === "user" ? "USUARIO" : "ASISTENTE";
     return `[${who}] ${m.content}`;
@@ -565,11 +519,6 @@ btnTheme.addEventListener("click", () => {
 });
 
 btnAttach.addEventListener("click", () => {
-<<<<<<< HEAD
-  addMessage("assistant", "Adjuntos (demo). Si quieres, te implemento carga real de archivos y envío al backend.");
-});
-
-=======
   if (!userConsentGiven) {
     alert("Por favor, acepta el tratamiento de datos para usar esta función.");
     return;
@@ -587,18 +536,14 @@ if (btnAdminLogin) { // Asegurarse de que el botón existe en la página
     });
 }
 
->>>>>>> e94429f (second commit)
 /* =========================
    INIT
 ========================= */
 (async function init(){
-<<<<<<< HEAD
-=======
     // Inicializar el tema guardado al inicio
   const savedTheme = localStorage.getItem('theme') || 'dark';
   document.documentElement.setAttribute('data-theme', savedTheme);
   btnTheme.textContent = savedTheme === "dark" ? "☾" : "☀";
->>>>>>> e94429f (second commit)
   // Hora del mensaje inicial
   document.querySelectorAll("[data-time]").forEach(el => el.textContent = nowTime());
 
@@ -617,13 +562,9 @@ if (btnAdminLogin) { // Asegurarse de que el botón existe en la página
       sendMessage(q);
     });
   });
-
-<<<<<<< HEAD
-=======
     // >>> INICIALIZAR CHAT (verificar consentimiento) <<<
   await initializeChat(); // Llama a la función para verificar el consentimiento
 
->>>>>>> e94429f (second commit)
   // Health check
   try{
     const r = await fetch(API.health);
