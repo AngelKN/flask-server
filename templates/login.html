@@ -1,0 +1,90 @@
+<!-- templates/login.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login Administrador | Alcaldía de Bucaramanga</title>
+    <!-- Reutilizamos el mismo CSS para mantener los estilos -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}" />
+
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="brand__logo" aria-hidden="true">AD</div>
+            <h1>Acceso Administrador</h1>
+            <p>Introduce tus credenciales para acceder al panel.</p>
+
+            <form id="loginForm" class="login-form" method="POST">
+                <div class="input-group">
+                    <input type="text" id="username" name="username" placeholder="Usuario" required />
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" name="password" placeholder="Contraseña" required />
+                </div>
+                <div id="errorMessage" class="error-message"></div>
+                <button type="submit" class="login-button">Ingresar</button>
+
+            </form>
+            <p style="margin-top:15px;">
+                <a href="{{ url_for('chat') }}" style="color: var(--primary); text-decoration:none;">
+                    ← Volver al Chat Ciudadano
+                </a>
+            </p>
+            <div class="footer-text">
+            <small>Para acceder, utiliza tus credenciales de administrador.</small>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        // Puedes añadir JS aquí si necesitas validaciones en el cliente,
+        // pero para el login con Flask basta con el POST básico.
+        // Si quieres AJAX, aquí iría:
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = loginForm.querySelector('.login-button');
+
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Evitar que el formulario haga submit normal
+            errorMessage.textContent = ''; // Limpiar mensaje de error previo
+            loginBtn.disabled = true; // Deshabilitar botón mientras procesa
+            loginBtn.textContent = 'Verificando...'; // Cambiar texto del botón
+
+            const username = usernameInput.value;
+            const password = passwordInput.value;
+
+            try {
+                const response = await fetch('/login', { // Endpoint en Flask
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Login exitoso - Redireccionar
+                    window.location.href = '/admin'; // Ruta de la página de administrador
+                } else {
+                    // Error de login
+                    errorMessage.textContent = data.error || 'Usuario o contraseña incorrectos.';
+                    loginBtn.textContent = 'Ingresar ➤'; // Restaurar texto
+                    loginBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error en la solicitud de login:', error);
+                errorMessage.textContent = 'Error al conectar con el servidor. Intente más tarde.';
+                loginBtn.textContent = 'Ingresar ➤'; // Restaurar texto
+                loginBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

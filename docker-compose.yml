@@ -1,0 +1,64 @@
+version: "3.8"
+
+services:
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - n8n
+      - flask
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    # IMPORTANTE: ya NO publiques 5678 hacia internet
+    # Caddy será el único que expone 80/443
+    expose:
+      - "5678"
+    environment:
+      - N8N_SECURE_COOKIE=true
+      - N8N_HOST=anaronn8n.duckdns.org
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://anaronn8n.duckdns.org/
+      - GENERIC_TIMEZONE=America/Bogota
+      - TZ=America/Bogota
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+  flask:
+    build: .
+    container_name: flask
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - N8N_WEBHOOK_URL=http://n8n:5678/webhook/chat-alcaldia
+      - REQUEST_TIMEOUT=60
+      - LOG_LEVEL=INFO
+
+<<<<<<< HEAD
+volumes:
+  n8n_data:
+  caddy_data:
+  caddy_config:
+
+=======
+      - FLASK_SECRET_KEY=bae89494e226be61f439aa0f8a1b4e085313b32e5e2faba851ea2a17fa6d749e
+      - SUPABASE_URL=https://vvhweaklnxnljnpqwnhd.supabase.co
+      - SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2aHdlYWtsbnhubGpucHF3bmhkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjU0MTYwNSwiZXhwIjoyMDgyMTE3NjA1fQ.lLC2SyT-9mEgVZunoXVpybsPXXIPSMX3C4My_jzCO7c
+
+volumes:
+  n8n_data:
+  caddy_data:
+  caddy_config:
+>>>>>>> e94429f (second commit)
