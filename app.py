@@ -24,7 +24,7 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY")
 # CONFIGURACIÓN SUPABASE
 # ===============================
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY",)
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
 supabase_client = None
 if SUPABASE_URL and SUPABASE_SERVICE_KEY:
