@@ -172,14 +172,15 @@ def mensaje():
     try:
         r = requests.post(N8N_WEBHOOK_URL, json=payload, timeout=REQUEST_TIMEOUT)
 
+        print("STATUS:", r.status_code)
+        print("BODY:", r.text)
+
         if r.status_code != 200:
             print("Error webhook:", r.status_code, r.text)
             return jsonify({"respuesta": "Error en servicio externo"}), 500
-        respuesta = r.json().get("reply", "Sin respuesta")
-
+        respuesta = r.json().get("respuesta", "Sin respuesta")
 
         return jsonify({"respuesta": respuesta}), 200
-
     except Exception:
         app.logger.exception("Error en chat")
         return jsonify({"respuesta": "Error interno"}), 500
@@ -370,23 +371,79 @@ def generar_reporte_pdf():
     elements.append(table)
     elements.append(Spacer(1, 30))
 
-    # =========================
-    # GRÁFICA MENSAJES POR DÍA
-    # =========================
-    img1 = io.BytesIO()
-    plt.figure()
-    plt.bar(daily_counter.keys(), daily_counter.values())
-    plt.xticks(rotation=45)
-    plt.title("Mensajes por Día")
-    plt.tight_layout()
-    plt.savefig(img1, format='png')
-    plt.close()
-    img1.seek(0)
 
+    # =========================
+    # 3. ANÁLISIS ESTADÍSTICO
+    # =========================
     elements.append(Paragraph("3. Análisis Estadístico", styles["Heading2"]))
-    elements.append(Spacer(1, 15))
-    elements.append(Image(img1, width=5*inch, height=3*inch))
-    elements.append(Spacer(1, 30))
+    elements.append(Spacer(1, 20))
+
+    # ---------------------------------------------------
+    # 3.1 Mensajes por Día
+    # ---------------------------------------------------
+    if daily_counter:
+        img1 = io.BytesIO()
+        plt.figure()
+        plt.bar(list(daily_counter.keys()), list(daily_counter.values()))
+        plt.xticks(rotation=45)
+        plt.title("Mensajes por Día")
+        plt.tight_layout()
+        plt.savefig(img1, format='png')
+        plt.close()
+        img1.seek(0)
+
+        elements.append(Paragraph("3.1 Mensajes por Día", styles["Heading3"]))
+        elements.append(Spacer(1, 10))
+        elements.append(Image(img1, width=5*inch, height=3*inch))
+        elements.append(Spacer(1, 25))
+
+
+    # ---------------------------------------------------
+    # 3.2 Distribución Temática
+    # ---------------------------------------------------
+    if topic_counter:
+        img2 = io.BytesIO()
+        plt.figure()
+        plt.bar(list(topic_counter.keys()), list(topic_counter.values()))
+        plt.xticks(rotation=45)
+        plt.title("Distribución por Tema")
+        plt.tight_layout()
+        plt.savefig(img2, format='png')
+        plt.close()
+        img2.seek(0)
+
+        elements.append(Paragraph("3.2 Distribución Temática", styles["Heading3"]))
+        elements.append(Spacer(1, 10))
+        elements.append(Image(img2, width=5*inch, height=3*inch))
+        elements.append(Spacer(1, 25))
+
+
+    # ---------------------------------------------------
+    # 3.3 Distribución por Canal (Dona)
+    # ---------------------------------------------------
+    if channel_counter:
+        img3 = io.BytesIO()
+        plt.figure()
+        wedges, texts, autotexts = plt.pie(
+            list(channel_counter.values()),
+            labels=list(channel_counter.keys()),
+            autopct='%1.1f%%'
+        )
+
+        centre_circle = plt.Circle((0, 0), 0.60, fc='white')
+        fig = plt.gcf()
+        fig.gca().add_artist(centre_circle)
+
+        plt.title("Distribución por Canal")
+        plt.tight_layout()
+        plt.savefig(img3, format='png')
+        plt.close()
+        img3.seek(0)
+
+        elements.append(Paragraph("3.3 Distribución por Canal", styles["Heading3"]))
+        elements.append(Spacer(1, 10))
+        elements.append(Image(img3, width=4*inch, height=4*inch))
+        elements.append(Spacer(1, 30))
 
     # =========================
     # CONCLUSIONES
