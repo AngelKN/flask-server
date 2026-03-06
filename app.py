@@ -147,7 +147,40 @@ def consent_status():
         return jsonify({"error": "Error interno"}), 500
     
 
+# ===============================
+# ENCUESTA DE SATISFACCIÓN
+# ===============================
+@app.post("/api/encuesta")
+def guardar_encuesta():
+    data = request.get_json()
+    
+    # Validar que al menos tengamos el sessionId
+    if not data or not data.get("sessionId"):
+        return jsonify({"error": "Faltan datos requeridos (sessionId)"}), 400
 
+    # Construir el diccionario con los datos a insertar
+    # Asegúrate de que las claves coincidan con los nombres de las columnas en tu BD
+    encuesta_data = {
+        "session_id": data.get("sessionId"),
+        "pregunta_1_amabilidad": data.get("amabilidad"),
+        "pregunta_2_claridad": data.get("claridad"),
+        "pregunta_3_resolvio": data.get("resolvio"),
+        "pregunta_4_recomendacion": data.get("recomendacion"),
+        "pregunta_5_comentarios": data.get("comentarios"),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+
+    try:
+        if not supabase_client:
+            return jsonify({"error": "DB no disponible"}), 500
+            
+        # Insertar en la tabla que acabas de crear
+        supabase_client.from_("encuestas_satisfaccion").insert(encuesta_data).execute()
+        
+        return jsonify({"message": "Encuesta registrada con éxito"}), 200
+    except Exception as e:
+        app.logger.exception("Error guardando encuesta de satisfacción")
+        return jsonify({"error": "Error interno al guardar la encuesta"}), 500
         
 # ===============================
 # CHAT
@@ -172,9 +205,6 @@ def mensaje():
     try:
         r = requests.post(N8N_WEBHOOK_URL, json=payload, timeout=REQUEST_TIMEOUT)
 
-        print("STATUS:", r.status_code)
-        print("BODY:", r.text)
-
         if r.status_code != 200:
             print("Error webhook:", r.status_code, r.text)
             return jsonify({"respuesta": "Error en servicio externo"}), 500
@@ -194,6 +224,7 @@ def admin_stats():
         return jsonify({"error": "No autorizado"}), 401
 
     try:
+        # --- 1. DATOS DEL CHAT ---
         response = supabase_client.from_("historial_mensajes").select("*").execute()
         data = response.data or []
 
@@ -207,20 +238,17 @@ def admin_stats():
 
         for row in data:
             session_ids.add(row.get("session_id"))
-
             ip_value = row.get("ID_unico")
             if ip_value and str(ip_value).strip() != "":
                 ips.add(ip_value)
 
             channels[row.get("canal")] += 1
 
-            # 📅 Fecha
             if row.get("created_at"):
                 dt = datetime.fromisoformat(row["created_at"].replace("Z", "+00:00"))
                 daily_counter[dt.strftime("%Y-%m-%d")] += 1
                 hourly_counter[dt.strftime("%H")] += 1
 
-            # 🎯 NUEVO: Clasificación por tema (desde BD)
             tema = row.get("tema")
             if tema and str(tema).strip() != "":
                 topic_counter[tema] += 1
@@ -232,7 +260,54 @@ def admin_stats():
         top_day = daily_counter.most_common(1)[0][0] if daily_counter else "-"
         top_topic = topic_counter.most_common(1)[0][0] if topic_counter else "-"
 
+        # --- 2. DATOS DE ENCUESTAS ---
+        resp_encuestas = supabase_client.from_("encuestas_satisfaccion").select("*").execute()
+        encuestas = resp_encuestas.data or []
+
+        amabilidad_sum = 0
+        amabilidad_count = 0
+        recomendacion_sum = 0
+        recomendacion_count = 0
+        claridad_counter = Counter()
+        resolvio_counter = Counter()
+        comentarios_lista = []
+
+        for e in encuestas:
+            # Q1 Amabilidad (1-5)
+            if e.get("pregunta_1_amabilidad") is not None:
+                amabilidad_sum += e["pregunta_1_amabilidad"]
+                amabilidad_count += 1
+            
+            # Q2 Claridad
+            if e.get("pregunta_2_claridad"):
+                claridad_counter[e["pregunta_2_claridad"]] += 1
+                
+            # Q3 Resolvió
+            if e.get("pregunta_3_resolvio"):
+                resolvio_counter[e["pregunta_3_resolvio"]] += 1
+                
+            # Q4 Recomendación (1-10)
+            if e.get("pregunta_4_recomendacion") is not None:
+                recomendacion_sum += e["pregunta_4_recomendacion"]
+                recomendacion_count += 1
+                
+            # Q5 Comentarios
+            if e.get("pregunta_5_comentarios") and str(e["pregunta_5_comentarios"]).strip() != "":
+                comentarios_lista.append({
+                    "fecha": e.get("created_at")[:10] if e.get("created_at") else "N/A",
+                    "texto": e["pregunta_5_comentarios"]
+                })
+
+        avg_amabilidad = round(amabilidad_sum / amabilidad_count, 1) if amabilidad_count > 0 else 0
+        avg_recomendacion = round(recomendacion_sum / recomendacion_count, 1) if recomendacion_count > 0 else 0
+        
+        # Últimos 5 comentarios
+        comentarios_lista.reverse()
+        ultimos_comentarios = comentarios_lista[:5]
+
+        # --- 3. RETORNO DE DATOS ---
         return jsonify({
+            # Chat Stats
             "totalSessions": total_sessions,
             "totalMessages": total_messages,
             "avgMessages": avg_messages,
@@ -245,10 +320,6 @@ def admin_stats():
                 "labels": list(daily_counter.keys()),
                 "data": list(daily_counter.values())
             },
-            "hourlyMessages": {
-                "labels": list(hourly_counter.keys()),
-                "data": list(hourly_counter.values())
-            },
             "topics": {
                 "labels": list(topic_counter.keys()),
                 "data": list(topic_counter.values())
@@ -256,14 +327,27 @@ def admin_stats():
             "channels": {
                 "labels": list(channels.keys()),
                 "data": list(channels.values())
+            },
+            # Survey Stats
+            "survey": {
+                "total": len(encuestas),
+                "avgAmabilidad": avg_amabilidad,
+                "avgRecomendacion": avg_recomendacion,
+                "claridad": {
+                    "labels": list(claridad_counter.keys()),
+                    "data": list(claridad_counter.values())
+                },
+                "resolvio": {
+                    "labels": list(resolvio_counter.keys()),
+                    "data": list(resolvio_counter.values())
+                },
+                "comentarios": ultimos_comentarios
             }
         }), 200
 
-    except Exception:
-        app.logger.exception("Error generando estadísticas")
+    except Exception as e:
+        app.logger.exception(f"Error generando estadísticas: {e}")
         return jsonify({"error": "Error interno"}), 500
-    
-
 
 @app.get("/consentimiento")
 def consentimiento_page():

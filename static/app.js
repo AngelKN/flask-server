@@ -26,6 +26,14 @@ const btnAcceptData = document.getElementById("btnAcceptData");
 const chatFooter = document.querySelector('.chat__footer'); // Para ocultar/mostrar
 const chatBodyContent = document.querySelector('.chat__body'); // Para ocultar/mostrar
 
+/* =========================
+   ELEMENTOS DE ENCUESTA
+========================= */
+const surveyModal = document.getElementById("surveyModal");
+const btnSubmitSurvey = document.getElementById("btnSubmitSurvey");
+const closeSurvey = document.getElementById("closeSurvey");
+const satisfactionForm = document.getElementById("satisfactionForm");
+
 let conversation = []; // local para exportación UI
 let userConsentGiven = false; // Rastrear si el usuario ha aceptado
 
@@ -86,8 +94,7 @@ function escapeHtml(str){
 }
 
 function addMessage(role, text){
-   // Solo añade mensajes si el consentimiento ha sido dado
-  if (!userConsentGiven && role === "assistant") return; // No mostrar respuestas del bot si no hay consentimiento
+  if (!userConsentGiven && role === "assistant") return;
 
   const wrapper = document.createElement("div");
   wrapper.className = `msg ${role === "user" ? "msg--user" : "msg--bot"}`;
@@ -115,6 +122,18 @@ function addMessage(role, text){
 
   bubble.appendChild(meta);
   bubble.appendChild(body);
+
+  // >>> NUEVO: Si es el bot, añadir botón de terminar sesión <<<
+  if (role === "assistant") {
+    const endBtn = document.createElement("button");
+    endBtn.className = "btn-end-session";
+    endBtn.innerHTML = "✕ Terminar y calificar";
+    endBtn.style.marginTop = "12px"; // Asegura espacio visual
+    endBtn.onclick = () => {
+      surveyModal.style.display = "flex";
+    };
+    bubble.appendChild(endBtn);
+  }
 
   wrapper.appendChild(bubble);
   chatBody.appendChild(wrapper);
@@ -533,6 +552,82 @@ if (btnAdminLogin) { // Asegurarse de que el botón existe en la página
     btnAdminLogin.addEventListener("click", () => {
         // Redirigir al usuario a la página de login ('/login')
           window.location.href = "/login";
+    });
+}
+
+
+/* =========================
+   LÓGICA DE ENCUESTA DE SATISFACCIÓN
+========================= */
+
+// Cerrar modal de encuesta
+if (closeSurvey) {
+  closeSurvey.onclick = () => {
+    surveyModal.style.display = "none";
+  };
+}
+// =========================
+// ENVÍO DE ENCUESTA
+// =========================
+if (btnSubmitSurvey) {
+    btnSubmitSurvey.addEventListener("click", async (e) => {
+        e.preventDefault(); // Prevenir el envío tradicional del formulario
+
+        // 1. Recoger los datos del formulario
+        const formData = new FormData(satisfactionForm);
+        const formProps = Object.fromEntries(formData.entries());
+        
+        // 2. Construir el payload mapeando q1, q2, q3... a lo que espera Python
+        const payload = {
+            sessionId: getSessionId(),
+            amabilidad: formProps.q1 ? parseInt(formProps.q1) : null,
+            claridad: formProps.q2 || null,
+            resolvio: formProps.q3 || null,
+            recomendacion: formProps.q4 ? parseInt(formProps.q4) : null,
+            comentarios: formProps.q5 || ""
+        };
+
+        setStatus("busy", "Enviando encuesta...");
+        btnSubmitSurvey.disabled = true;
+
+        try {
+            // 3. Enviar al backend
+            const response = await fetch('/api/encuesta', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.error || "Error al guardar la encuesta");
+            }
+
+            // 4. Éxito: Ocultar modal, limpiar sesión y reiniciar
+            surveyModal.style.display = "none";
+            alert("¡Muchas gracias! Tu opinión ha sido registrada exitosamente.");
+            
+            // Limpiar la sesión para que parezca un chat nuevo
+            resetSessionId(); 
+            conversation = [];
+            chatBody.innerHTML = ""; // Limpiar los mensajes visualmente
+            
+            // Recargar la página para asegurar un estado limpio (opcional pero recomendado)
+            location.reload(); 
+
+        } catch (error) {
+            console.error("Error al enviar encuesta:", error);
+            alert("Hubo un problema al guardar tu opinión. Intenta nuevamente.");
+            btnSubmitSurvey.disabled = false;
+            setStatus("warn", "Error al enviar encuesta.");
+        }
+    });
+}
+
+// Evento para cerrar el modal sin enviar
+if (closeSurvey) {
+    closeSurvey.addEventListener("click", () => {
+        surveyModal.style.display = "none";
     });
 }
 

@@ -1,6 +1,7 @@
 <!-- templates/admin.html -->
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,99 +14,156 @@
 
 <body>
 
-<div class="admin-wrapper">
+    <div class="admin-wrapper">
 
-    <!-- HEADER --> <div class="admin-header"> <div class="admin-title"> <h1>📊 Dashboard de Atención Ciudadana</h1> <p>Alcaldía de Bucaramanga</p> </div> <div> Bienvenido, {{ username }} </div> </div>
-
-    <div class="dashboard-top">
-    <div class="metric-card highlight">
-        <div>
-            <h4>Total Conversaciones</h4>
-            <p class="metric-value" id="totalSessions">0</p>
+        <!-- HEADER -->
+        <div class="admin-header">
+            <div class="admin-title">
+                <h1>📊 Dashboard de Atención Ciudadana</h1>
+                <p>Alcaldía de Bucaramanga</p>
+            </div>
+            <div> Bienvenido, {{ username }} </div>
         </div>
-        <div class="metric-icon">💬</div>
+
+        <div class="dashboard-top">
+            <div class="metric-card highlight">
+                <div>
+                    <h4>Total Conversaciones</h4>
+                    <p class="metric-value" id="totalSessions">0</p>
+                </div>
+                <div class="metric-icon">💬</div>
+            </div>
+
+            <div class="metric-card">
+                <div>
+                    <h4>Total Mensajes</h4>
+                    <p class="metric-value" id="totalMessages">0</p>
+                </div>
+                <div class="metric-icon">📨</div>
+            </div>
+
+            <div class="metric-card clickable" id="uniqueIpsCard">
+                <div>
+                    <h4>Usuarios Únicos</h4>
+                    <p class="metric-value" id="uniqueIps">0</p>
+                </div>
+                <div class="metric-icon">👥</div>
+            </div>
+
+            <div class="metric-card">
+                <div>
+                    <h4>Promedio por Conversación</h4>
+                    <p class="metric-value" id="avgMessages">0</p>
+                </div>
+                <div class="metric-icon">📊</div>
+            </div>
+        </div>
+
+        <div class="dashboard-charts">
+
+            <!-- FILA 1: Gráficos circulares -->
+            <div class="chart-row-circular">
+                <div class="chart-half">
+                    <h3>Distribución por Tema</h3>
+                    <canvas id="topicsChart"></canvas>
+                </div>
+
+                <div class="chart-half">
+                    <h3>Mensajes por Canal</h3>
+                    <canvas id="channelChart"></canvas>
+                </div>
+            </div>
+
+            <!-- FILA 2: Gráfica de barras abajo -->
+            <div class="chart-row-bar">
+                <div class="chart-full">
+                    <h3>Mensajes por Día</h3>
+                    <canvas id="messagesPerDayChart"></canvas>
+                </div>
+            </div>
+
+            <div class="admin-title" style="margin-top: 50px; margin-bottom: 20px;">
+                <h2>🌟 Satisfacción del Ciudadano</h2>
+                <p>Resultados de las encuestas post-atención</p>
+            </div>
+
+            <div class="dashboard-top">
+                <div class="metric-card">
+                    <div>
+                        <h4>Total Encuestas</h4>
+                        <p class="metric-value" id="totalSurveys">0</p>
+                    </div>
+                    <div class="metric-icon">📝</div>
+                </div>
+                <div class="metric-card">
+                    <div>
+                        <h4>Promedio Amabilidad (1-5)</h4>
+                        <p class="metric-value" id="avgAmabilidad">0.0</p>
+                    </div>
+                    <div class="metric-icon">⭐</div>
+                </div>
+                <div class="metric-card">
+                    <div>
+                        <h4>Índice Recomendación (1-10)</h4>
+                        <p class="metric-value" id="avgRecomendacion">0.0</p>
+                    </div>
+                    <div class="metric-icon">👍</div>
+                </div>
+            </div>
+
+            <div class="dashboard-charts">
+                <div class="chart-row-circular">
+                    <div class="chart-half">
+                        <h3>Claridad de Información</h3>
+                        <canvas id="clarityChart"></canvas>
+                    </div>
+                    <div class="chart-half">
+                        <h3>Resolución de Trámite</h3>
+                        <canvas id="resolutionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-full" style="height: auto; margin-bottom: 40px;">
+                <h3>Últimos Comentarios</h3>
+                <div id="commentsContainer" class="comments-list">
+                    <p style="color: var(--muted); padding: 10px;">Cargando comentarios...</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- BOTONES -->
+        <div class="admin-actions">
+            <a href="{{ url_for('generar_reporte_pdf') }}">
+                <button class="admin-btn">
+                    📄 Generar Reporte PDF
+                </button>
+            </a>
+
+            <a href="{{ url_for('logout') }}" class="logout-btn">
+                Cerrar Sesión
+            </a>
+        </div>
+
     </div>
 
-    <div class="metric-card">
-        <div>
-            <h4>Total Mensajes</h4>
-            <p class="metric-value" id="totalMessages">0</p>
-        </div>
-        <div class="metric-icon">📨</div>
-    </div>
-
-    <div class="metric-card clickable" id="uniqueIpsCard">
-        <div>
-            <h4>Usuarios Únicos</h4>
-            <p class="metric-value" id="uniqueIps">0</p>
-        </div>
-        <div class="metric-icon">👥</div>
-    </div>
-
-    <div class="metric-card">
-        <div>
-            <h4>Promedio por Conversación</h4>
-            <p class="metric-value" id="avgMessages">0</p>
-        </div>
-        <div class="metric-icon">📊</div>
-    </div>
-</div>
-
-<div class="dashboard-charts">
-
-    <!-- FILA 1: Gráficos circulares -->
-    <div class="chart-row-circular">
-        <div class="chart-half">
-            <h3>Distribución por Tema</h3>
-            <canvas id="topicsChart"></canvas>
-        </div>
-
-        <div class="chart-half">
-            <h3>Mensajes por Canal</h3>
-            <canvas id="channelChart"></canvas>
+    <!-- MODAL IPs -->
+    <div class="modal" id="ipModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Direcciones IP Registradas</h3>
+                <span class="close-modal" id="closeModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <ul id="ipListContainer"></ul>
+            </div>
         </div>
     </div>
 
-    <!-- FILA 2: Gráfica de barras abajo -->
-    <div class="chart-row-bar">
-        <div class="chart-full">
-            <h3>Mensajes por Día</h3>
-            <canvas id="messagesPerDayChart"></canvas>
-        </div>
-    </div>
-
-</div>
-
-    <!-- BOTONES -->
-    <div class="admin-actions">
-        <a href="{{ url_for('generar_reporte_pdf') }}">
-            <button class="admin-btn">
-                📄 Generar Reporte PDF
-            </button>
-        </a>
-
-        <a href="{{ url_for('logout') }}" class="logout-btn">
-            Cerrar Sesión
-        </a>
-    </div>
-
-</div>
-
-<!-- MODAL IPs -->
-<div class="modal" id="ipModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Direcciones IP Registradas</h3>
-            <span class="close-modal" id="closeModal">&times;</span>
-        </div>
-        <div class="modal-body">
-            <ul id="ipListContainer"></ul>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{{ url_for('static', filename='admin.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='admin.js') }}"></script>
 
 </body>
+
 </html>

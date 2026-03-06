@@ -40,52 +40,52 @@ async function loadStats() {
             labels: stats.dailyMessages.labels,
             datasets: [{
                 borderRadius: 8,
-barThickness: 35,
+                barThickness: 35,
                 label: "Mensajes por Día",
                 data: stats.dailyMessages.data
             }]
         },
         options: {
-    responsive: true,
-    animation: {
-    duration: 1600,
-    easing: 'easeOutQuart'
-},
-hover: {
-    mode: 'nearest',
-    intersect: true
-},
-    plugins: {
-        legend: {
-            display: false
-        },
-        tooltip: {
-            backgroundColor: "#111827",
-            padding: 12,
-            titleFont: { size: 14, weight: "600" },
-            bodyFont: { size: 13 }
-        }
-    },
-    scales: {
-        x: {
-            grid: {
-                display: false
+            responsive: true,
+            animation: {
+                duration: 1600,
+                easing: 'easeOutQuart'
             },
-            ticks: {
-                font: { size: 12, weight: "500" }
-            }
-        },
-        y: {
-            grid: {
-                color: "rgba(255,255,255,0.05)",
-                drawBorder: false
+            hover: {
+                mode: 'nearest',
+                intersect: true
             },
-            ticks: {
-                font: { size: 12 }
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: "#111827",
+                    padding: 12,
+                    titleFont: { size: 14, weight: "600" },
+                    bodyFont: { size: 13 }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: { size: 12, weight: "500" }
+                    }
+                },
+                y: {
+                    grid: {
+                        color: "rgba(255,255,255,0.05)",
+                        drawBorder: false
+                    },
+                    ticks: {
+                        font: { size: 12 }
+                    }
+                }
             }
         }
-    }
-}
     });
 
 
@@ -107,35 +107,35 @@ hover: {
             }]
         },
         options: {
-    responsive: true,
-    layout: {
-        padding: 10
-    },
-    animation: {
-        duration: 1400,
-        easing: 'easeOutQuart'
-    },
-hover: {
-    mode: 'nearest',
-    intersect: true
-},
+            responsive: true,
+            layout: {
+                padding: 10
+            },
+            animation: {
+                duration: 1400,
+                easing: 'easeOutQuart'
+            },
+            hover: {
+                mode: 'nearest',
+                intersect: true
+            },
 
-    plugins: {
-        legend: {
-            position: "bottom",
-            labels: {
-                usePointStyle: true,
-                pointStyle: "circle",
-                padding: 20,
-                font: { size: 12, weight: "500" }
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        usePointStyle: true,
+                        pointStyle: "circle",
+                        padding: 20,
+                        font: { size: 12, weight: "500" }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: "#111827",
+                    padding: 10
+                }
             }
-        },
-        tooltip: {
-            backgroundColor: "#111827",
-            padding: 10
         }
-    }
-}
     });
 
     // =============================
@@ -157,30 +157,92 @@ hover: {
             }]
         },
         options: {
-    responsive: true,
-    layout: {
-        padding: 10
-    },
-    animation: {
-        duration: 1600,
-        easing: 'easeOutQuart'
-    },
-hover: {
-    mode: 'nearest',
-    intersect: true
-},
-    plugins: {
-        legend: {
-            position: "bottom",
-            labels: {
-                usePointStyle: true,
-                pointStyle: "circle",
-                padding: 20
+            responsive: true,
+            layout: {
+                padding: 10
+            },
+            animation: {
+                duration: 1600,
+                easing: 'easeOutQuart'
+            },
+            hover: {
+                mode: 'nearest',
+                intersect: true
+            },
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        usePointStyle: true,
+                        pointStyle: "circle",
+                        padding: 20
+                    }
+                }
+            }
+        }
+    });
+
+    // === ESTADÍSTICAS DE ENCUESTAS ===
+    // === ESTADÍSTICAS DE ENCUESTAS ===
+    // Cambiamos 'data' por 'stats' que es la variable definida arriba
+    if (stats.survey) {
+        document.getElementById("totalSurveys").textContent = stats.survey.total;
+        document.getElementById("avgAmabilidad").textContent = stats.survey.avgAmabilidad;
+        document.getElementById("avgRecomendacion").textContent = stats.survey.avgRecomendacion;
+
+        // Gráfica de Claridad (Q2)
+        const ctxClarity = document.getElementById('clarityChart');
+        if (ctxClarity) {
+            new Chart(ctxClarity, {
+                type: 'doughnut',
+                data: {
+                    labels: stats.survey.claridad.labels.map(l => l.toUpperCase()),
+                    datasets: [{
+                        data: stats.survey.claridad.data,
+                        backgroundColor: ['#4caf50', '#ff9800', '#f44336'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#b0bec5' } } } }
+            });
+        }
+
+        // Gráfica de Resolución (Q3)
+        const ctxResolution = document.getElementById('resolutionChart');
+        if (ctxResolution) {
+            new Chart(ctxResolution, {
+                type: 'pie',
+                data: {
+                    labels: stats.survey.resolvio.labels.map(l => l.toUpperCase()),
+                    datasets: [{
+                        data: stats.survey.resolvio.data,
+                        backgroundColor: ['#2196f3', '#e91e63'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#b0bec5' } } } }
+            });
+        }
+
+        // Comentarios (Q5)
+        const commentsContainer = document.getElementById("commentsContainer");
+        if (commentsContainer) {
+            commentsContainer.innerHTML = "";
+            if (stats.survey.comentarios.length === 0) {
+                commentsContainer.innerHTML = "<p style='color: #78909c;'>No hay comentarios registrados aún.</p>";
+            } else {
+                stats.survey.comentarios.forEach(c => {
+                    const div = document.createElement("div");
+                    div.className = "comment-item";
+                    div.innerHTML = `
+                    <span class="comment-date">${c.fecha}</span>
+                    <p class="comment-text">"${c.texto}"</p>
+                `;
+                    commentsContainer.appendChild(div);
+                });
             }
         }
     }
-}
-    });
 }
 
 
