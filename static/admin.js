@@ -25,68 +25,61 @@ async function loadStats() {
     document.getElementById("avgMessages").textContent = stats.avgMessages;
     document.getElementById("uniqueIps").textContent = stats.uniqueIps;
 
-    // =============================
-    // 📊 GRÁFICA MENSAJES POR DÍA
-    // =============================
     const ctx = document.getElementById("messagesPerDayChart");
 
-    if (messagesChart) {
-        messagesChart.destroy();
-    }
+if (messagesChart) {
+    messagesChart.destroy();
+}
 
-    messagesChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: stats.dailyMessages.labels,
-            datasets: [{
-                borderRadius: 8,
-                barThickness: 35,
-                label: "Mensajes por Día",
-                data: stats.dailyMessages.data
-            }]
+messagesChart = new Chart(ctx, {
+    type: "line",
+    data: {
+        labels: stats.dailyMessages.labels,
+        datasets: [{
+            label: "Mensajes por Día",
+            data: stats.dailyMessages.data,
+
+            borderColor: "#3B82F6",
+            backgroundColor: "rgba(59,130,246,0.2)",
+
+            tension: 0.4,        // curva suave
+            fill: true,          // relleno tipo area
+            pointRadius: 4,
+            pointHoverRadius: 6
+        }]
+    },
+
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+
+        layout: {
+            padding: 10
         },
-        options: {
-            responsive: true,
-            animation: {
-                duration: 1600,
-                easing: 'easeOutQuart'
-            },
-            hover: {
-                mode: 'nearest',
-                intersect: true
-            },
-            plugins: {
-                legend: {
+
+        animation: {
+            duration: 1400,
+            easing: "easeOutQuart"
+        },
+
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+
+        scales: {
+            x: {
+                grid: {
                     display: false
-                },
-                tooltip: {
-                    backgroundColor: "#111827",
-                    padding: 12,
-                    titleFont: { size: 14, weight: "600" },
-                    bodyFont: { size: 13 }
                 }
             },
-            scales: {
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        font: { size: 12, weight: "500" }
-                    }
-                },
-                y: {
-                    grid: {
-                        color: "rgba(255,255,255,0.05)",
-                        drawBorder: false
-                    },
-                    ticks: {
-                        font: { size: 12 }
-                    }
-                }
+            y: {
+                beginAtZero: true
             }
         }
-    });
+    }
+});
 
 
     // =============================
@@ -103,36 +96,57 @@ async function loadStats() {
         data: {
             labels: stats.topics.labels,
             datasets: [{
-                data: stats.topics.data
+                data: stats.topics.data,
+                backgroundColor: [
+                    "#3B82F6",
+                    "#F97316",
+                    "#22C55E",
+                    "#EAB308",
+                    "#8B5CF6"
+                ],
+                borderWidth: 0
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
+
             layout: {
                 padding: 10
             },
+
             animation: {
                 duration: 1400,
-                easing: 'easeOutQuart'
-            },
-            hover: {
-                mode: 'nearest',
-                intersect: true
+                easing: "easeOutQuart"
             },
 
             plugins: {
+
                 legend: {
-                    position: "bottom",
+                    position: "right",
                     labels: {
                         usePointStyle: true,
                         pointStyle: "circle",
-                        padding: 20,
-                        font: { size: 12, weight: "500" }
+                        padding: 15,
+                        font: {
+                            size: 13
+                        }
                     }
                 },
+
                 tooltip: {
                     backgroundColor: "#111827",
-                    padding: 10
+                    padding: 10,
+                    callbacks: {
+                        label: function (context) {
+
+                            let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            let value = context.raw;
+                            let percentage = ((value / total) * 100).toFixed(1);
+
+                            return `${context.label}: ${value} (${percentage}%)`;
+                        }
+                    }
                 }
             }
         }
@@ -152,30 +166,55 @@ async function loadStats() {
         data: {
             labels: stats.channels.labels,
             datasets: [{
-                label: "Mensajes por Canal",
-                data: stats.channels.data
+                data: stats.channels.data,
+                backgroundColor: [
+                    "#60A5FA",
+                    "#FB923C",
+                    "#22C55E"
+                ],
+                borderWidth: 0
             }]
         },
+        
         options: {
             responsive: true,
+            maintainAspectRatio: false,
+
             layout: {
                 padding: 10
             },
+
             animation: {
-                duration: 1600,
-                easing: 'easeOutQuart'
+                duration: 1400,
+                easing: "easeOutQuart"
             },
-            hover: {
-                mode: 'nearest',
-                intersect: true
-            },
+
             plugins: {
+
                 legend: {
-                    position: "bottom",
+                    position: "right",
                     labels: {
                         usePointStyle: true,
                         pointStyle: "circle",
-                        padding: 20
+                        padding: 15,
+                        font: {
+                            size: 13
+                        }
+                    }
+                },
+
+                tooltip: {
+                    backgroundColor: "#111827",
+                    padding: 10,
+                    callbacks: {
+                        label: function (context) {
+
+                            let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            let value = context.raw;
+                            let percentage = ((value / total) * 100).toFixed(1);
+
+                            return `${context.label}: ${value} (${percentage}%)`;
+                        }
                     }
                 }
             }
@@ -235,8 +274,10 @@ async function loadStats() {
                     const div = document.createElement("div");
                     div.className = "comment-item";
                     div.innerHTML = `
-                    <span class="comment-date">${c.fecha}</span>
-                    <p class="comment-text">"${c.texto}"</p>
+                    <div class="feedback-card">
+                        <small>${c.fecha}</small>
+                        <p class="">"${c.texto}"</p>
+                    </div>
                 `;
                     commentsContainer.appendChild(div);
                 });

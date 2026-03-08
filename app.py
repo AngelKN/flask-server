@@ -17,13 +17,13 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
-app.secret_key = os.getenv("FLASK_SECRET_KEY")
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "bae894946be61f439aa0f8a1b4e085313b32e5e2faba851ea2a17fa6d749e")
 
 # ===============================
 # CONFIGURACIÓN SUPABASE
 # ===============================
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://vvhweaklnxnljnpqwnhd.supabase.co")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2aHdlYWtsbnhubGpucHF3bmhkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjU0MTYwNSwiZXhwIjoyMDgyMTE3NjA1fQ.lLC2SyT-9mEgVZunoXVpybsPXXIPSMX3C4My_jzCO7c")
 
 supabase_client = None
 if SUPABASE_URL and SUPABASE_SERVICE_KEY:
@@ -35,7 +35,7 @@ if SUPABASE_URL and SUPABASE_SERVICE_KEY:
 
 logging.basicConfig(level="INFO")
 
-N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL")
+N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL", "https://anaronn8n.duckdns.org/webhook-test/chat-alcaldia")
 REQUEST_TIMEOUT = 180
 
 # ===============================
