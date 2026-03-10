@@ -17,13 +17,13 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "bae894946be61f439aa0f8a1b4e085313b32e5e2faba851ea2a17fa6d749e")
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
 
 # ===============================
 # CONFIGURACIÓN SUPABASE
 # ===============================
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://vvhweaklnxnljnpqwnhd.supabase.co")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2aHdlYWtsbnhubGpucHF3bmhkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjU0MTYwNSwiZXhwIjoyMDgyMTE3NjA1fQ.lLC2SyT-9mEgVZunoXVpybsPXXIPSMX3C4My_jzCO7c")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
 supabase_client = None
 if SUPABASE_URL and SUPABASE_SERVICE_KEY:
@@ -35,7 +35,7 @@ if SUPABASE_URL and SUPABASE_SERVICE_KEY:
 
 logging.basicConfig(level="INFO")
 
-N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL", "https://anaronn8n.duckdns.org/webhook-test/chat-alcaldia")
+N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL")
 REQUEST_TIMEOUT = 180
 
 # ===============================
@@ -353,11 +353,15 @@ def admin_stats():
 def consentimiento_page():
     return render_template("consentimiento.html")
 
+
 @app.get("/admin/reporte")
 def generar_reporte_pdf():
     if not session.get("logged_in"):
         return redirect(url_for("show_login"))
 
+    # =========================
+    # EXTRACCIÓN DE DATOS: MENSAJES
+    # =========================
     response = supabase_client.from_("historial_mensajes").select("*").execute()
     data = response.data or []
 
@@ -390,6 +394,34 @@ def generar_reporte_pdf():
     top_topic = topic_counter.most_common(1)[0][0] if topic_counter else "N/A"
     top_channel = channel_counter.most_common(1)[0][0] if channel_counter else "N/A"
 
+    # =========================
+    # EXTRACCIÓN DE DATOS: ENCUESTAS
+    # =========================
+    # Asegúrate de cambiar "encuestas" por el nombre real de tu tabla en Supabase
+    encuestas_response = supabase_client.from_("encuestas_satisfaccion").select("*").execute()
+    encuestas_data = encuestas_response.data or []
+
+    q1_scores = []
+    q2_counter = Counter()
+    q3_counter = Counter()
+    q4_scores = []
+    comentarios = []
+
+    for row in encuestas_data:
+        if row.get("pregunta_1_amabilidad"): q1_scores.append(int(row["pregunta_1_amabilidad"]))
+        if row.get("pregunta_2_claridad"): q2_counter[row["pregunta_2_claridad"]] += 1
+        if row.get("pregunta_3_resolvio"): q3_counter[row["pregunta_3_resolvio"]] += 1
+        if row.get("pregunta_4_recomendacion"): q4_scores.append(int(row["pregunta_4_recomendacion"]))
+        if row.get("pregunta_5_comentarios") and str(row["pregunta_5_comentarios"]).strip(): 
+            comentarios.append(str(row["pregunta_5_comentarios"]).strip())
+
+    avg_q1 = round(sum(q1_scores) / len(q1_scores), 2) if q1_scores else 0
+    avg_q4 = round(sum(q4_scores) / len(q4_scores), 2) if q4_scores else 0
+    total_encuestas = len(encuestas_data)
+
+    # =========================
+    # CONFIGURACIÓN DEL PDF
+    # =========================
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -414,22 +446,21 @@ def generar_reporte_pdf():
     elements.append(Spacer(1, 40))
 
     # =========================
-    # RESUMEN EJECUTIVO
+    # 1. RESUMEN EJECUTIVO
     # =========================
     resumen = f"""
     Durante el periodo evaluado se registraron <b>{total_sessions}</b> conversaciones 
     con un total de <b>{total_messages}</b> mensajes procesados. 
     El tema más consultado fue <b>{top_topic}</b> y el canal con mayor interacción fue 
-    <b>{top_channel}</b>.
+    <b>{top_channel}</b>. Además, se recolectaron <b>{total_encuestas}</b> encuestas de satisfacción.
     """
-
     elements.append(Paragraph("1. Resumen Ejecutivo", styles["Heading2"]))
     elements.append(Spacer(1, 10))
     elements.append(Paragraph(resumen, styles["Normal"]))
     elements.append(Spacer(1, 25))
 
     # =========================
-    # MÉTRICAS GENERALES
+    # 2. MÉTRICAS GENERALES
     # =========================
     elements.append(Paragraph("2. Indicadores Generales", styles["Heading2"]))
     elements.append(Spacer(1, 10))
@@ -455,16 +486,13 @@ def generar_reporte_pdf():
     elements.append(table)
     elements.append(Spacer(1, 30))
 
-
     # =========================
-    # 3. ANÁLISIS ESTADÍSTICO
+    # 3. ANÁLISIS ESTADÍSTICO DE USO
     # =========================
     elements.append(Paragraph("3. Análisis Estadístico", styles["Heading2"]))
     elements.append(Spacer(1, 20))
 
-    # ---------------------------------------------------
     # 3.1 Mensajes por Día
-    # ---------------------------------------------------
     if daily_counter:
         img1 = io.BytesIO()
         plt.figure()
@@ -481,10 +509,7 @@ def generar_reporte_pdf():
         elements.append(Image(img1, width=5*inch, height=3*inch))
         elements.append(Spacer(1, 25))
 
-
-    # ---------------------------------------------------
     # 3.2 Distribución Temática
-    # ---------------------------------------------------
     if topic_counter:
         img2 = io.BytesIO()
         plt.figure()
@@ -501,23 +526,14 @@ def generar_reporte_pdf():
         elements.append(Image(img2, width=5*inch, height=3*inch))
         elements.append(Spacer(1, 25))
 
-
-    # ---------------------------------------------------
-    # 3.3 Distribución por Canal (Dona)
-    # ---------------------------------------------------
+    # 3.3 Distribución por Canal
     if channel_counter:
         img3 = io.BytesIO()
         plt.figure()
-        wedges, texts, autotexts = plt.pie(
-            list(channel_counter.values()),
-            labels=list(channel_counter.keys()),
-            autopct='%1.1f%%'
-        )
-
+        plt.pie(list(channel_counter.values()), labels=list(channel_counter.keys()), autopct='%1.1f%%')
         centre_circle = plt.Circle((0, 0), 0.60, fc='white')
         fig = plt.gcf()
         fig.gca().add_artist(centre_circle)
-
         plt.title("Distribución por Canal")
         plt.tight_layout()
         plt.savefig(img3, format='png')
@@ -530,7 +546,75 @@ def generar_reporte_pdf():
         elements.append(Spacer(1, 30))
 
     # =========================
-    # CONCLUSIONES
+    # 4. RESULTADOS DE ENCUESTA DE SATISFACCIÓN
+    # =========================
+    elements.append(Paragraph("4. Resultados de Satisfacción del Usuario", styles["Heading2"]))
+    elements.append(Spacer(1, 10))
+
+    if total_encuestas == 0:
+        elements.append(Paragraph("<i>No se han registrado respuestas en la encuesta de satisfacción para este periodo.</i>", styles["Normal"]))
+        elements.append(Spacer(1, 20))
+    else:
+        # 4.1 Promedios Simples
+        kpi_text = f"""
+        <b>Promedio de amabilidad (1 al 5):</b> {avg_q1} / 5<br/>
+        <b>Nivel de recomendación del canal (1 al 10):</b> {avg_q4} / 10
+        """
+        elements.append(Paragraph(kpi_text, styles["Normal"]))
+        elements.append(Spacer(1, 20))
+
+        # 4.2 Gráficas de Claridad y Resolución
+        if q2_counter or q3_counter:
+            img_encuestas = io.BytesIO()
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))
+            
+            # Gráfico Q2: Claridad
+            if q2_counter:
+                ax1.pie(list(q2_counter.values()), labels=list(q2_counter.keys()), autopct='%1.1f%%', colors=['#4CAF50', '#FFC107', '#F44336'])
+                ax1.set_title("Claridad de la Información")
+            
+            # Gráfico Q3: Resolución
+            if q3_counter:
+                ax2.pie(list(q3_counter.values()), labels=list(q3_counter.keys()), autopct='%1.1f%%', colors=['#2196F3', '#FF5722'])
+                ax2.set_title("¿Logró resolver su duda?")
+
+            plt.tight_layout()
+            plt.savefig(img_encuestas, format='png')
+            plt.close()
+            img_encuestas.seek(0)
+
+            elements.append(Image(img_encuestas, width=6*inch, height=2.4*inch))
+            elements.append(Spacer(1, 25))
+
+        # 4.3 Comentarios Adicionales
+        elements.append(Paragraph("<b>Comentarios Adicionales de los Usuarios:</b>", styles["Heading3"]))
+        elements.append(Spacer(1, 10))
+
+        if comentarios:
+            # Crear una tabla para los comentarios para que el texto se ajuste bien (word wrap)
+            comentarios_data = [["#", "Comentario"]]
+            for idx, comentario in enumerate(comentarios, 1):
+                # Se envuelve el texto en un Paragraph para que no se salga de los márgenes
+                p_comentario = Paragraph(comentario, styles["Normal"])
+                comentarios_data.append([str(idx), p_comentario])
+
+            tabla_comentarios = Table(comentarios_data, colWidths=[30, 420])
+            tabla_comentarios.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#003366")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
+                ("FONTSIZE", (0, 0), (-1, -1), 9),
+            ]))
+            elements.append(tabla_comentarios)
+        else:
+            elements.append(Paragraph("<i>No se registraron comentarios adicionales.</i>", styles["Normal"]))
+        
+        elements.append(Spacer(1, 30))
+
+    # =========================
+    # 5. CONCLUSIONES
     # =========================
     conclusion = f"""
     El sistema presenta una alta concentración de consultas relacionadas con <b>{top_topic}</b>, 
@@ -538,16 +622,15 @@ def generar_reporte_pdf():
     Se recomienda evaluar estrategias de comunicación digital y optimización del canal 
     <b>{top_channel}</b>.
     """
-
-    elements.append(Paragraph("4. Conclusiones", styles["Heading2"]))
+    elements.append(Paragraph("5. Conclusiones", styles["Heading2"]))
     elements.append(Spacer(1, 10))
     elements.append(Paragraph(conclusion, styles["Normal"]))
     elements.append(Spacer(1, 20))
 
     # =========================
-    # LISTA DE IPS
+    # 6. LISTA DE IPS
     # =========================
-    elements.append(Paragraph("5. Usuarios Registrados", styles["Heading2"]))
+    elements.append(Paragraph("6. Usuarios Registrados", styles["Heading2"]))
     elements.append(Spacer(1, 10))
 
     ip_list = [ListItem(Paragraph(ip, styles["Normal"])) for ip in ips]
@@ -562,7 +645,6 @@ def generar_reporte_pdf():
         download_name="Informe_Ejecutivo_Chat_Institucional.pdf",
         mimetype="application/pdf"
     )
-
 
 # ===============================
 # MAIN
