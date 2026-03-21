@@ -14,7 +14,6 @@ const txtMessage = document.getElementById("txtMessage");
 const btnSend = document.getElementById("btnSend");
 const btnNew = document.getElementById("btnNew");
 const btnExport = document.getElementById("btnExport");
-const btnTheme = document.getElementById("btnTheme");
 const btnAttach = document.getElementById("btnAttach");
 const typingHint = document.getElementById("typingHint");
 const statusLabel = document.getElementById("statusLabel");
@@ -528,15 +527,6 @@ btnExport.addEventListener("click", () => {
   const header = `Conversación - Alcaldía de Bucaramanga\nExportado: ${new Date().toLocaleString()}\nSessionId: ${getSessionId()}\n\n`;
   downloadText("conversacion.txt", header + (lines || "Sin mensajes."));
 });
-
-btnTheme.addEventListener("click", () => {
-  const root = document.documentElement;
-  const current = root.getAttribute("data-theme") || "dark";
-  const next = current === "dark" ? "light" : "dark";
-  root.setAttribute("data-theme", next);
-  btnTheme.textContent = next === "dark" ? "☾" : "☀";
-});
-
 btnAttach.addEventListener("click", () => {
   if (!userConsentGiven) {
     alert("Por favor, acepta el tratamiento de datos para usar esta función.");
@@ -638,7 +628,6 @@ if (closeSurvey) {
     // Inicializar el tema guardado al inicio
   const savedTheme = localStorage.getItem('theme') || 'dark';
   document.documentElement.setAttribute('data-theme', savedTheme);
-  btnTheme.textContent = savedTheme === "dark" ? "☾" : "☀";
   // Hora del mensaje inicial
   document.querySelectorAll("[data-time]").forEach(el => el.textContent = nowTime());
 
